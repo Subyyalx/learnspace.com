@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AWS Architect Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .section-card {
+      margin-bottom: 2rem;
+    }
+    .video-preview {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand mb-0 h1"><i class="bi bi-mortarboard-fill me-2"></i>AWS Architect Pro</span>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="mb-4">
+      <h4>Course Progress</h4>
+      <div class="progress" style="height: 24px;">
+        <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+          {{ progress }}%
+        </div>
+      </div>
+    </div>
+
+    {% for section in course %}
+      <div class="card section-card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-folder-fill me-2"></i><strong>{{ section.name }}</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for lecture in section.lectures %}
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="bi bi-play-circle me-2"></i>
+                  <a href="#{{ lecture.collapse_id }}" data-bs-toggle="collapse">{{ lecture.title }}</a>
+                </div>
+                <div>
+                  {% if lecture.id in completed %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                  {% else %}
+                    <form method="POST" action="/complete" class="d-inline">
+                      <input type="hidden" name="lecture_id" value="{{ lecture.id }}">
+                      <button class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-check2-square"></i> Mark Complete
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div id="{{ lecture.collapse_id }}" class="collapse mt-2">
+                <video controls class="video-preview" data-video-id="{{ lecture.id }}">
+                  <source src="{{ url_for('serve_video', filename=lecture.id) }}" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Resume video playback position using localStorage
+    document.querySelectorAll('video[data-video-id]').forEach(video => {
+      const id = video.getAttribute('data-video-id');
+      const savedTime = localStorage.getItem('video-' + id);
+      if (savedTime) {
+        video.currentTime = parseFloat(savedTime);
+      }
+
+      video.addEventListener('timeupdate', () => {
+        localStorage.setItem('video-' + id, video.currentTime);
+      });
+
+      video.addEventListener('ended', () => {
+        localStorage.removeItem('video-' + id);
+      });
+    });
+  </script>
+</body>
+</html>
